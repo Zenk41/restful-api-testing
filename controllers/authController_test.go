@@ -22,18 +22,16 @@ func InitEchoTestAPI() *echo.Echo {
 
 func TestRegisterUser(t *testing.T) {
 	var testCases = []struct {
-		name                     string
-		path                     string
-		expectCode               int
-		expectedBodyStartsWith   string
-		expectedBodyContainsWith string
+		name                   string
+		path                   string
+		expectCode             int
+		expectedBodyStartsWith string
 	}{
 		{
-			name:                     "register normal",
-			path:                     "/register",
-			expectCode:               http.StatusCreated,
-			expectedBodyStartsWith:   "{\"message\":\"success register new user\"",
-			expectedBodyContainsWith: ",\"user\":[",
+			name:                   "register normal",
+			path:                   "/register",
+			expectCode:             http.StatusCreated,
+			expectedBodyStartsWith: "{\"message\":\"success register new user\"",
 		},
 	}
 
@@ -59,7 +57,6 @@ func TestRegisterUser(t *testing.T) {
 			body := rec.Body.String()
 
 			assert.True(t, strings.HasPrefix(body, testCase.expectedBodyStartsWith))
-			assert.True(t, strings.Contains(body, testCase.expectedBodyContainsWith))
 		}
 	}
 }
@@ -67,23 +64,23 @@ func TestRegisterUser(t *testing.T) {
 func TestUserLogin(t *testing.T) {
 
 	var testCases = []struct {
-		name                 string
-		path                 string
-		expectCode           int
+		name                   string
+		path                   string
+		expectCode             int
 		expectedBodyStartsWith string
 	}{
 		{
-			name:                 "get token normal",
-			path:                 "/login",
-			expectCode:           http.StatusCreated,
+			name:                   "get token normal",
+			path:                   "/login",
+			expectCode:             http.StatusOK,
 			expectedBodyStartsWith: "{\"token\":",
 		},
 	}
 
 	e := InitEchoTestAPI()
-	userLogin := database.SeedRegister()
-	token := database.SeedLogin()
-	bearer := "Bearer " + token
+
+	database.SeedRegister()
+	userLogin, _ := database.SeedLogin()
 
 	jsonBody, _ := json.Marshal(&userLogin)
 	bodyReader := bytes.NewReader(jsonBody)
@@ -92,7 +89,6 @@ func TestUserLogin(t *testing.T) {
 	rec := httptest.NewRecorder()
 
 	req.Header.Add("Content-Type", "application/json")
-	req.Header.Add("Authorization", bearer)
 
 	c := e.NewContext(req, rec)
 
@@ -100,7 +96,7 @@ func TestUserLogin(t *testing.T) {
 		c.SetPath(testCase.path)
 
 		if assert.NoError(t, Login(c)) {
-			assert.Equal(t, http.StatusCreated, rec.Code)
+			assert.Equal(t, http.StatusOK, rec.Code)
 			body := rec.Body.String()
 
 			assert.True(t, strings.HasPrefix(body, testCase.expectedBodyStartsWith))

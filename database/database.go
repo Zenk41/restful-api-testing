@@ -105,25 +105,28 @@ func SeedRegister() models.User {
 }
 
 // Seed for Login to get token
-func SeedLogin() string {
-	var user models.User = models.User{}
-
-	if err := DB.First(&user, "email=?", "ardhidhani@gmail.com").Error; err != nil {
+func SeedLogin() (*models.User, string) {
+	user := SeedRegister()
+	var loginUser models.UserLogin= models.UserLogin{
+	Email: "ardhidhani@gmail.com",
+	Password: "123",
+	}
+	if err := DB.First(&user, "email=?", loginUser.Email).Error; err != nil {
 		panic(err)
 	}
 	if user.ID == 0 {
-		return ""
+		return nil,""
 	}
-	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte("123"))
+	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(loginUser.Password))
 
 	if err != nil {
-		return ""
+		return nil,""
 	}
 	token, err := mid.CreateToken(user.ID)
 	if err != nil {
-		return ""
+		return nil,""
 	}
-	return token
+	return &user, token
 }
 
 // Seed for Creating Book
